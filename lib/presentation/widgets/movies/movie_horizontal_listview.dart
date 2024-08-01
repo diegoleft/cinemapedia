@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:cinemapedia/config/helpers/human_format.dart';
 import 'package:flutter/material.dart';
 import 'package:cinemapedia/domain/entities/movie.dart';
+import 'package:go_router/go_router.dart';
 
 class MovieHorizontalListview extends StatefulWidget {
 
@@ -95,7 +96,10 @@ class _Slide extends StatelessWidget {
                   if(loadingProgress != null){
                     return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                   }
-                  return FadeIn(child: child);
+                  return GestureDetector(
+                    onTap: () => context.push('/movie/${movie.id}'),
+                    child: FadeIn(child: child),
+                  );
                 },
               ),
             ),
@@ -105,11 +109,7 @@ class _Slide extends StatelessWidget {
 
           SizedBox(
             width: 150,
-            child: Text(
-              movie.title,
-              maxLines: 2,
-              style: textStyle.titleSmall
-            ),
+            child: _MovieTitle(movie: movie, releaseDate: movie.releaseDate, textStyle: textStyle),
           ),
 
           // RATING
@@ -128,6 +128,28 @@ class _Slide extends StatelessWidget {
           
         ],
       ),
+    );
+  }
+}
+
+class _MovieTitle extends StatelessWidget {
+  const _MovieTitle({
+    super.key,
+    required this.movie,
+    this.releaseDate,
+    required this.textStyle,
+  });
+
+  final Movie movie;
+  final TextTheme textStyle;
+  final DateTime? releaseDate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '${movie.title} (${movie.releaseDate?.year ?? "nn"})',
+      maxLines: 2,
+      style: textStyle.titleSmall
     );
   }
 }
