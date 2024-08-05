@@ -1,6 +1,8 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:cinemapedia/domain/entities/movie.dart';
 import 'package:cinemapedia/presentation/providers/providers.dart';
+import 'package:cinemapedia/presentation/widgets/video/youtube_player_widget.dart';
+import 'package:cinemapedia/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,12 +20,14 @@ class MovieScreen extends ConsumerStatefulWidget {
 
 
 class MovieScreenState extends ConsumerState<MovieScreen> {
-
+  
   @override
   void initState() {
     super.initState();
     ref.read(movieInfoProvider.notifier).loadMovie(widget.movieId);
     ref.read(actorsByMovieProvider.notifier).loadActors(widget.movieId);
+    ref.read(recommendationsByMovieProvider.notifier).loadRecommendations(widget.movieId);
+    ref.read(videosByMovieProvider.notifier).loadVideos(widget.movieId);
   }
 
   
@@ -117,7 +121,10 @@ class _MovieDetails extends StatelessWidget {
         ),
 
         _ActorsByMovie(movieId: movie.id.toString()),
-        const SizedBox(height: 50)
+        _VideoTrailer(movieId: movie.id.toString()),
+        const SizedBox(height: 50),
+        _RecommendationsByMovie(movieId: movie.id.toString()),
+        const SizedBox(height: 50),
       ]
     );
   }
@@ -149,10 +156,11 @@ class _CustomSliverAppBar extends ConsumerWidget {
       foregroundColor: Colors.white,
       actions: [
         IconButton(
-          onPressed: (){
+          onPressed: () async{
             
             // salva o estado de favorito
-            ref.watch(localStorageRepositoryProvider).toggleFavorite(movie);
+            // ref.read(localStorageRepositoryProvider).toggleFavorite(movie);
+            await ref.read(favoriteMoviesProvider.notifier).toggleFavorite(movie);
 
             // actualiza el estado de la base de datos
             ref.invalidate(isFavoriteProvider(movie.id));
@@ -302,5 +310,64 @@ class _ActorsByMovie extends ConsumerWidget {
         }
       ),
     );
+  }
+}
+
+
+
+class _VideoTrailer extends ConsumerWidget {
+
+  final String movieId;
+  
+  const _VideoTrailer({required this.movieId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+
+    final videosByMovie = ref.watch(videosByMovieProvider);
+
+    if(videosByMovie[movieId]==null) return const CircularProgressIndicator(strokeWidth: 2);
+    
+    final videos = videosByMovie[movieId]!;
+    final trailers = videos.where((video) => video.type.contains("Trailer"));
+
+    if(trailers.isEmpty) {
+      return const Center(
+        child: Column(
+          children: [
+            Icon(Icons.tv_off_outlined, color: Colors.white24, size: 30),
+            SizedBox(height: 10),
+            Text('Trailer no disponible')
+          ]
+          )
+      );
+    }
+
+    final trailer = trailers.first;
+
+    return YoutubePlayerWidget(youtubeId: trailer.key);
+  }
+}
+
+
+class _RecommendationsByMovie extends ConsumerWidget {
+
+  final String movieId;
+  
+  const _RecommendationsByMovie({required this.movieId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+
+    final recommendationsByMovie = ref.watch(recommendationsByMovieProvider);
+
+    if(recommendationsByMovie[movieId]==null) return const CircularProgressIndicator(strokeWidth: 2);
+    
+    final recommendations = recommendationsByMovie[movieId]!;
+
+    return MovieHorizontalListview(
+            movies: recommendations,
+            title: 'Películas similares',
+          );
   }
 }

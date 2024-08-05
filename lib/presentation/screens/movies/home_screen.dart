@@ -11,7 +11,7 @@ class HomeScreen extends StatelessWidget {
 
   final viewRoutes = const <Widget>[
     HomeView(),
-    CategoriesView(),
+    PopularsView(),
     FavoritesView()
   ];
 
@@ -25,4 +25,13 @@ class HomeScreen extends StatelessWidget {
       bottomNavigationBar: CustomBottomNavigation(currentIndex: pageIndex),
     );
   }
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     body: PageView(
+  //       children: viewRoutes,
+  //     ),
+  //     bottomNavigationBar: CustomBottomNavigation(currentIndex: pageIndex),
+  //   );
+  // }
 }
